@@ -1,19 +1,36 @@
 #!/usr/bin/python
 
-import netmeter_config
+# Copyright (C) 2012  tdubourg, License: see LICENSE file in same folder
+
+# This program is free software: you can redistribute it and/or modify
+# it under the terms of the GNU General Public License as published by
+# the Free Software Foundation, version 3 of the License
+
+# This program is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+# GNU General Public License for more details.
+
+# You should have received a copy of the GNU General Public License v3
+# along with this program.  If not, see <http://www.gnu.org/licenses/>.
+
+from netmeter_config import *
 
 toMiB = 1024.0*1024.0
 
-with open(FNAME_TOTAL_RCV, "r") as f:
-	total_rcv = float(f.readline()) / toMiB
+interfaces = get_interfaces()
 
-with open(FNAME_TOTAL_SENT, "r") as f:
-	total_sent = float(f.readline()) / toMiB
+for i in interfaces:
+	with open(fname_with_interface(FNAME_TOTAL_RCV, i), "r") as f:
+		total_rcv = float(f.readline()) / toMiB
 
-with open(FNAME_SESS_RCV, "r") as f:
-	sess_rcv = float(f.readline()) / toMiB
+	with open(fname_with_interface(FNAME_TOTAL_SENT, i), "r") as f:
+		total_sent = float(f.readline()) / toMiB
 
-with open(FNAME_SESS_SENT, "r") as f:
-	sess_sent = float(f.readline()) / toMiB
+	with open(fname_with_interface(FNAME_SESS_RCV, i), "r") as f:
+		sess_rcv = float(f.readline()) / toMiB
 
-print "Received: \nSession:", sess_rcv, " MiB\nTotal:", (total_rcv+sess_rcv), "MiB\nSent: \nSession:", sess_sent, "MiB\nTotal:", (total_sent+sess_sent), "MiB"
+	with open(fname_with_interface(FNAME_SESS_SENT, i), "r") as f:
+		sess_sent = float(f.readline()) / toMiB
+
+	print "\n\n=== Interface:", i, "===\nReceived: \n\tSession: " "%.2f" % sess_rcv, "MiB\n\tTotal:", "%.2f" % (total_rcv+sess_rcv), "MiB\nSent: \n\tSession:", "%.2f" % sess_sent, "MiB\n\tTotal:", "%.2f" % (total_sent+sess_sent),	"MiB"

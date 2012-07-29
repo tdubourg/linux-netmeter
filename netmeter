@@ -1,10 +1,24 @@
 #!/usr/bin/python
 
-import re
+# Copyright (C) 2012  tdubourg, License: see LICENSE file in same folder
+
+# This program is free software: you can redistribute it and/or modify
+# it under the terms of the GNU General Public License as published by
+# the Free Software Foundation, version 3 of the License
+
+# This program is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+# GNU General Public License for more details.
+
+# You should have received a copy of the GNU General Public License v3
+# along with this program.  If not, see <http://www.gnu.org/licenses/>.
+
+
 from signal import alarm
 from signal import pause
 import signal
-import netmeter_config
+from netmeter_config import *
 
 
 # Utilities functions: 
@@ -26,8 +40,6 @@ def open_in_read_or_create(fname):
 		f = open(fname, "w+")
 	return f
 
-r_interface_line = re.compile("^ *([a-zA-z0-9]+):(( +([0-9]+)){16})\n?$")
-r_figure = re.compile("([0-9]+)")
 
 interfaces = get_interfaces()
 
@@ -72,13 +84,14 @@ while True:
 			if m is not None:
 				interface_name = m.group(1)
 				if DBG:
+					print "Current interface:", interface_name
 					print "Group:", m.group(2), "\n\n"
 				m = r_figure.findall(m.group(2))
 				if m is not None:
 					session_recv = int(m[0])
 					session_sent = int(m[8])
-					replace_content_in_file(fname_with_interface(FNAME_SESS_RCV), session_recv)
-					replace_content_in_file(FNAME_SESS_SENT, session_sent)
+					replace_content_in_file(fname_with_interface(FNAME_SESS_RCV, interface_name), session_recv)
+					replace_content_in_file(fname_with_interface(FNAME_SESS_SENT, interface_name), session_sent)
 					if DBG:
 						print "Received:", session_recv, "Sent:", session_sent
 			elif DBG:
