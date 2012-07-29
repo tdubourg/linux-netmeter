@@ -48,18 +48,27 @@ if DBG:
 
 signal.signal(signal.SIGALRM, doNothing)
 
-# Updating the total value by adding the vlue of last session	
-for i in interfaces:
+def put_session_in_total_count_for_interface(i):
 	f_tot_rcv = open_in_read_or_create(fname_with_interface(FNAME_TOTAL_RCV, i))
 	f_tot_sent = open_in_read_or_create(fname_with_interface(FNAME_TOTAL_SENT, i))
 
-	f_sess_rcv = open_in_read_or_create(fname_with_interface(FNAME_TOTAL_SENT, i))
-	f_sess_sent = open_in_read_or_create(fname_with_interface(FNAME_TOTAL_SENT, i,))
+	f_sess_rcv = open_in_read_or_create(fname_with_interface(FNAME_SESS_RCV, i))
+	f_sess_sent = open_in_read_or_create(fname_with_interface(FNAME_SESS_SENT, i))
 
 	try:
-		total_rcv = int(f_tot_rcv.readline()) + int(f_sess_rcv.readline())
-		total_sent = int(f_tot_sent.readline()) + int(f_sess_sent.readline())
-	except ValueError:
+		# if DBG:
+			# print "For interface", i, "former value was: up", int(f_sess_rcv.readline()), 'down', int(f_sess_sent.readline())
+		try:
+			prev_total_rcv = int(f_tot_rcv.readline())
+			prev_total_sent = int(f_tot_sent.readline())
+		except ValueError:
+			prev_total_rcv = 0
+			prev_total_sent = 0
+		total_rcv =  prev_total_rcv + int(f_sess_rcv.readline())
+		total_sent = prev_total_sent + int(f_sess_sent.readline())
+	except ValueError as e:
+		if DBG:
+			print e
 		total_rcv = 0
 		total_sent = 0
 
@@ -69,11 +78,21 @@ for i in interfaces:
 	f_sess_rcv.close()
 
 	# Updating the TOTAL files: 
+	if DBG:
+		print "Replacing totals by: down", total_rcv, "up", total_sent
 	replace_content_in_file(fname_with_interface(FNAME_TOTAL_RCV, i), total_rcv)
 	replace_content_in_file(fname_with_interface(FNAME_TOTAL_SENT, i), total_sent)
 
+# Updating the total value by adding the vlue of last session	
+former_values = {}
+for i in interfaces:
+	former_values[i] = {'rcv': 0, 'sent': 0}
+	put_session_in_total_count_for_interface(i)
+
 session_recv = 0
 session_sent = 0
+
+
 # Start the never-ending story !
 while True:
 	if DBG:
@@ -90,6 +109,17 @@ while True:
 				if m is not None:
 					session_recv = int(m[0])
 					session_sent = int(m[8])
+					
+					# If the connection has been reset without restarting the computer
+					# Then put the current session in the total counts before resetting it
+					if session_recv < former_values[interface_name]["rcv"] or session_sent < former_values[interface_name]["sent"]:
+						if DBG:
+							print "Connection was reset for interface", interface_name
+						put_session_in_total_count_for_interface(interface_name)
+					
+					former_values[interface_name]["rcv"] = session_recv
+					former_values[interface_name]["sent"] = session_sent
+					
 					replace_content_in_file(fname_with_interface(FNAME_SESS_RCV, interface_name), session_recv)
 					replace_content_in_file(fname_with_interface(FNAME_SESS_SENT, interface_name), session_sent)
 					if DBG:
