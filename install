@@ -1,0 +1,20 @@
+#!/bin/sh
+
+LOG_DIR=/var/log/netmeter
+echo "=================================================="
+echo "Hello."
+echo "Netmeter installation launched."
+echo "Note: This script needs to be run from the netmeter install dir AS ROOT"
+
+mkdir -vp $LOG_DIR
+
+chmod +x netmeter -v
+chmod -vR 0777 $LOG_DIR
+
+ln -sv `pwd`/netmeter /etc/init.d/netmeter
+
+echo "Installation finished. Netmeter will be started after reboot. If you want to run it now, execute the following line:"
+echo "/etc/init.d/netmeter &"
+echo "(note: netmeter would be closed if you close the console where you typed that line)"
+echo "Have a nice day."
+echo "=================================================="

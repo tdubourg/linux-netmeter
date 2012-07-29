@@ -15,9 +15,9 @@
 import re
 
 # Constants: 
-DBG = True
+DBG = False
 
-LOG_DIRECTORY = "/tmp"
+LOG_DIRECTORY = "/var/log/netmeter"
 FNAME_TOTAL_RCV = LOG_DIRECTORY + "/netmeter_total_rcv.log"
 FNAME_TOTAL_SENT = LOG_DIRECTORY + "/netmeter_total_sent.log"
 
