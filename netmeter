@@ -82,17 +82,26 @@ def put_session_in_total_count_for_interface(i):
 		print "Replacing totals by: down", total_rcv, "up", total_sent
 	replace_content_in_file(fname_with_interface(FNAME_TOTAL_RCV, i), total_rcv)
 	replace_content_in_file(fname_with_interface(FNAME_TOTAL_SENT, i), total_sent)
+	# Reset of session files: 
+	replace_content_in_file(fname_with_interface(FNAME_SESS_RCV, i), 0)
+	replace_content_in_file(fname_with_interface(FNAME_SESS_SENT, i), 0)
 
 # Updating the total value by adding the vlue of last session	
 former_values = {}
+EMPTY_INTERFACE = lambda: {"rcv": 0, "sent": 0}
+
+def create_interface(i):
+	global former_values;
+	former_values[i] = EMPTY_INTERFACE()
+
 for i in interfaces:
-	former_values[i] = {'rcv': 0, 'sent': 0}
+	create_interface(i);
 	put_session_in_total_count_for_interface(i)
+
 
 session_recv = 0
 session_sent = 0
-
-
+()
 # Start the never-ending story !
 while True:
 	if DBG:
@@ -112,18 +121,33 @@ while True:
 					
 					# If the connection has been reset without restarting the computer
 					# Then put the current session in the total counts before resetting it
-					if session_recv < former_values[interface_name]["rcv"] or session_sent < former_values[interface_name]["sent"]:
+					try:
+						if session_recv < former_values[interface_name]["rcv"] or session_sent < former_values[interface_name]["sent"]:
+							if DBG:
+								print "Connection was reset for interface", interface_name
+								print "Former vs. new values (rcv, sent) are: (", former_values[interface_name]["rcv"], ",", former_values[interface_name]["sent"] ,") vs (", session_recv, ",", session_sent, ")"
+							put_session_in_total_count_for_interface(interface_name)
+					except KeyError as e:
 						if DBG:
-							print "Connection was reset for interface", interface_name
+							print "New interface ", interface_name, " was added. Pushing to Totals possible session remaining and starting a new session"
 						put_session_in_total_count_for_interface(interface_name)
+						former_values[interface_name] = EMPTY_INTERFACE()
 					
+					if DBG:
+						print "Updating former values for interface", interface_name, "..."
 					former_values[interface_name]["rcv"] = session_recv
 					former_values[interface_name]["sent"] = session_sent
+					
+					if DBG:
+						print "Updating former values for interface", interface_name, "updated to:", former_values[interface_name]["rcv"], ",", former_values[interface_name]["sent"]
 					
 					replace_content_in_file(fname_with_interface(FNAME_SESS_RCV, interface_name), session_recv)
 					replace_content_in_file(fname_with_interface(FNAME_SESS_SENT, interface_name), session_sent)
 					if DBG:
 						print "Received:", session_recv, "Sent:", session_sent
+					
+					if DBG:
+						print former_values
 			elif DBG:
 				print "The pattern was not matched against the line l=", l
 	alarm(INTERVAL)
