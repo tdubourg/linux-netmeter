@@ -1,6 +1,8 @@
 #!/bin/sh
 
 LOG_DIR=/var/log/netmeter
+INIT_RD_DIR=/etc/init.d
+INITSCRIPT=$INIT_RD_DIR/netmeter
 echo "=================================================="
 echo "Hello."
 echo "Netmeter installation launched."
@@ -11,7 +13,11 @@ mkdir -vp $LOG_DIR
 chmod +x netmeter -v
 chmod -vR 0777 $LOG_DIR
 
-ln -sv `pwd`/netmeter /etc/init.d/netmeter
+# ln -sv `pwd`/netmeter /etc/init.d/netmeter
+echo "PROGRAM="`pwd`/netmeter > $INITSCRIPT
+cat netmeter.initscript >> $INITSCRIPT
+update-rc.d -f netmeter remove
+update-rc.d netmeter start 90 2 3 4 5 .
 
 echo "Installation finished. Netmeter will be started after reboot. If you want to run it now, execute the following line:"
 echo "/etc/init.d/netmeter &"
